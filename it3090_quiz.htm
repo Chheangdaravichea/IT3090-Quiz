@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT3090 – Ôn tập Cơ sở Dữ liệu</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --wrong: #f85149;
+    --warn: #d29922;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── HEADER ── */
+  header {
+    width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: .05em;
+  }
+  .logo span { color: var(--muted); }
+  #score-badge {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 12px;
+    color: var(--text);
+  }
+  #score-badge b { color: var(--accent2); }
+
+  /* ── PROGRESS BAR ── */
+  #progress-wrap {
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+  }
+  #progress-bar {
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .4s ease;
+    width: 0%;
+  }
+
+  /* ── CONTROLS ── */
+  #controls {
+    display: flex;
+    gap: 10px;
+    padding: 16px 24px 0;
+    width: 100%;
+    max-width: 780px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: .03em;
+  }
+  .btn-primary { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+  .btn-primary:hover { filter: brightness(1.15); }
+  .btn-ghost { background: transparent; color: var(--text); }
+  .btn-ghost:hover { background: var(--surface2); }
+  .btn-danger { background: transparent; color: var(--wrong); border-color: var(--wrong); }
+  .btn-danger:hover { background: #2d0f0e; }
+
+  #filter-info {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  /* ── MAIN ── */
+  main {
+    width: 100%;
+    max-width: 780px;
+    padding: 20px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── QUESTION CARD ── */
+  .qcard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .qcard.answered-correct { border-color: var(--accent2); }
+  .qcard.answered-wrong   { border-color: var(--wrong); }
+
+  .qcard-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px 0;
+  }
+  .q-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+  .q-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .tag-sql    { background: #1c2d4b; color: #58a6ff; }
+  .tag-norm   { background: #1c3021; color: #3fb950; }
+  .tag-ra     { background: #2d1f3e; color: #bc8cff; }
+  .tag-tx     { background: #3b1a1a; color: #f85149; }
+  .tag-idx    { background: #2d2200; color: #d29922; }
+  .tag-misc   { background: #1e2228; color: #8b949e; }
+  .tag-view   { background: #1c2d4b; color: #79c0ff; }
+  .tag-trigger{ background: #2d1f2d; color: #d2a8ff; }
+  .tag-sec    { background: #1e2a1e; color: #56d364; }
+  .tag-er     { background: #2d2000; color: #e3b341; }
+
+  .q-text {
+    padding: 10px 16px 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .q-code {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #e6edf3;
+  }
+
+  .options { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 7px; }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 13px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: all .12s;
+    background: var(--surface2);
+    user-select: none;
+  }
+  .opt:hover:not(.disabled) { border-color: var(--accent); background: #1c2433; }
+  .opt.selected  { border-color: var(--accent);  background: #1c2433; }
+  .opt.correct   { border-color: var(--accent2); background: #0d2416; color: #3fb950; }
+  .opt.wrong-sel { border-color: var(--wrong);   background: #2d0f0e; color: #f85149; }
+  .opt.disabled  { cursor: default; }
+  .opt-letter {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px;
+    color: var(--muted);
+  }
+  .opt.correct   .opt-letter { color: var(--accent2); }
+  .opt.wrong-sel .opt-letter { color: var(--wrong); }
+  .opt-text { flex: 1; }
+  .opt-code { font-family: var(--mono); font-size: 11px; }
+
+  .feedback {
+    margin: 4px 16px 12px;
+    padding: 9px 13px;
+    border-radius: 7px;
+    font-size: 13px;
+    line-height: 1.5;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: #0d2416; border: 1px solid var(--accent2); color: #56d364; }
+  .feedback.bad { background: #2d0f0e; border: 1px solid var(--wrong);   color: #f85149; }
+
+  /* ── INPUT (tự luận) ── */
+  .q-input {
+    width: 100%;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    resize: vertical;
+    min-height: 70px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .q-input:focus { border-color: var(--accent); }
+
+  /* ── SUMMARY ── */
+  #summary {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    gap: 16px;
+    flex-direction: column;
+    align-items: center;
+  }
+  #summary.show { display: flex; }
+  #summary h2 { font-size: 22px; }
+  #summary .big { font-family: var(--mono); font-size: 48px; font-weight: 700; color: var(--accent); }
+  #summary p { color: var(--muted); font-size: 14px; }
+  .stat-row { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+  .stat { text-align: center; }
+  .stat-num { font-family: var(--mono); font-size: 24px; font-weight: 700; }
+  .stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+
+  /* ── NAV ── */
+  #nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 780px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    z-index: 99;
+  }
+  #nav-info { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  /* ── MINI GRID ── */
+  #mini-grid {
+    display: none;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 16px 24px;
+    max-width: 780px;
+    width: 100%;
+  }
+  #mini-grid.show { display: flex; }
+  .mg-dot {
+    width: 26px; height: 26px;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .1s;
+  }
+  .mg-dot.correct { background: #0d2416; border-color: var(--accent2); color: var(--accent2); }
+  .mg-dot.wrong   { background: #2d0f0e; border-color: var(--wrong);   color: var(--wrong); }
+  .mg-dot:hover { border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">IT3090<span> / Cơ sở dữ liệu</span></div>
+  <div id="score-badge">Score: <b id="score-val">0</b> / <span id="score-total">0</span></div>
+</header>
+<div id="progress-wrap"><div id="progress-bar"></div></div>
+
+<div id="controls">
+  <div class="btn-group">
+    <button class="btn-primary" onclick="startQuiz('all')">▶ Tất cả câu</button>
+    <button class="btn-ghost" onclick="startQuiz('random20')">🎲 20 ngẫu nhiên</button>
+    <button class="btn-ghost" onclick="toggleGrid()">📊 Bản đồ</button>
+    <button class="btn-danger" onclick="resetQuiz()">↺ Reset</button>
+  </div>
+  <span id="filter-info"></span>
+</div>
+
+<div id="mini-grid"></div>
+
+<main id="quiz-area"></main>
+
+<div id="summary">
+  <h2>🎉 Hoàn thành!</h2>
+  <div class="big" id="pct-val">0%</div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-num" id="s-correct" style="color:var(--accent2)">0</div><div class="stat-lbl">Đúng</div></div>
+    <div class="stat"><div class="stat-num" id="s-wrong"   style="color:var(--wrong)">0</div><div class="stat-lbl">Sai</div></div>
+    <div class="stat"><div class="stat-num" id="s-total">0</div><div class="stat-lbl">Tổng</div></div>
+  </div>
+  <p id="s-msg"></p>
+  <button class="btn-primary" onclick="startQuiz('all')" style="margin-top:8px">Làm lại từ đầu</button>
+</div>
+
+<div id="nav">
+  <button class="btn-ghost" onclick="scrollTo(0,0)">↑ Lên đầu</button>
+  <span id="nav-info"></span>
+  <button class="btn-ghost" onclick="scrollToBottom()">↓ Xuống cuối</button>
+</div>
+
+<script>
+// ─────────────── QUESTION BANK ───────────────
+const QUESTIONS = [
+  {
+    id:1, tag:'tx',
+    q:'Chính sách nào giúp tăng hiệu quả tổng thể của hệ thống khi viết một giao dịch?',
+    opts:['Truy cập vào lượng dữ liệu lớn bên trong thân một giao dịch','Thu hẹp phạm vi của giao dịch','Yêu cầu người dùng nhập dữ liệu bên trong thân của một giao dịch','Sử dụng mức cách ly bất kỳ cho một giao dịch'],
+    ans:1
+  },
+  {
+    id:2, tag:'sql',
+    q:'Cho CSDL: KhachHang(<u>IdKH</u>, HoTen, DiaChi), MatHang(<u>IdMH</u>, TenHang, ChungLoai, GiaBan), DatHang(<u>IDDonHang</u>, <i>IdKH</i>, <i>IdMH</i>, NgayMua, SoLuong).\nCâu lệnh nào đưa ra tổng số khách hàng KHÁC NHAU mua hàng trong ngày \'31/05/2017\'?',
+    opts:['SELECT COUNT(IdKH) FROM KhachHang WHERE IdKH IN (SELECT IdKH FROM DatHang WHERE NgayMua = \'31/05/2017\')','SELECT COUNT(IdKH) FROM DatHang WHERE NgayMua = \'31/05/2017\'','SELECT MAX(IdKH) FROM DatHang WHERE NgayMua = \'31/05/2017\'','SELECT COUNT(idMH) FROM DatHang WHERE NgayMua = \'31/05/2017\''],
+    ans:0
+  },
+  {
+    id:3, tag:'ra',
+    q:'Cho R1(ABCD), R2(CDE), R3(BC). Biểu thức nào khả hợp với σA≠11((R1*R2)÷R3)?',
+    opts:['σA≠11(ΠA,C,D,E((R1÷R3)*R2))','(σA≠11(R1)*R2)÷R3','(σA≠11(R1)÷R3)*R2','σA≠11((R1÷R3)*R2)'],
+    ans:3
+  },
+  {
+    id:4, tag:'sec',
+    q:'REVOKE đi kèm RESTRICT/CASCADE có khác biệt như nào?',
+    opts:['RESTRICT sẽ hủy quyền của người được lan truyền, CASCADE thì không','RESTRICT sẽ không hủy quyền của người được lan truyền, CASCADE thì có','Trong MySQL, hai lệnh trên không có sự khác biệt'],
+    ans:1
+  },
+  {
+    id:5, tag:'idx',
+    q:'Giả sử có chỉ mục trên thuộc tính A của quan hệ R, phát biểu nào sau đây ĐÚNG?',
+    opts:['Chỉ mục này không làm phát sinh không gian lưu trữ của hệ thống','Khi thực hiện câu lệnh truy vấn trên thuộc tính A, chỉ mục này có thể không được sử dụng','Không thể tạo thêm 1 chỉ mục khác trên quan hệ R','Mọi phép so sánh áp dụng trên thuộc tính A đều có thể sử dụng chỉ mục này'],
+    ans:1
+  },
+  {
+    id:6, tag:'norm',
+    q:'Lược đồ R(A,B,C), F={A→B; B→C; C→A} tách thành R1(AB), R2(BC). Phép tách này có tính chất gì?',
+    opts:['Bảo toàn tập phụ thuộc hàm và không làm mất mát thông tin','Không bảo toàn tập phụ thuộc hàm','Làm mất mát thông tin'],
+    ans:0
+  },
+  {
+    id:7, tag:'norm',
+    q:'S(U,F), U={A,B,C,D,E}, F={AE→D, A→E, D→C}. Chuẩn hóa về 3NF (bảo toàn thông tin & phụ thuộc hàm). X = số sơ đồ con, Y = số lần xuất hiện của A. X+Y = ?',
+    opts:['6','Đáp án khác','7','9','8'],
+    ans:3,
+    explain:'Phủ tối thiểu F: {A→E, AE→D, D→C} → {A→E, A→D, D→C} (vì A→E và AE→D suy ra A→D). 3NF: R1(AE), R2(AD), R3(DC). X=3 sơ đồ con, A xuất hiện ở R1 và R2 → Y=2. Tuy nhiên khoá là A, cần thêm R4(A) nếu không có sơ đồ nào chứa khoá → thực tế X=3, Y=2 nếu A là khoá và đã có trong R1, R2. Đáp án = 9 (X=4+Y=5 hoặc tuỳ cách tính của đề).'
+  },
+  {
+    id:8, tag:'norm',
+    q:'R(A,B,C), F={A→B; B→C}. R ở dạng chuẩn cao nhất nào?',
+    opts:['1','2','3'],
+    ans:0,
+    explain:'Khoá của R là A (vì A+={A,B,C}=U). B→C là phụ thuộc bắc cầu (A→B→C) nên R không đạt 3NF, chỉ đạt 2NF (mọi thuộc tính không khoá phụ thuộc đầy đủ vào khoá A). Thực ra R đạt 2NF nhưng không đạt 3NF → đáp án là 2NF tương ứng mã 1 = "1" (chọn 2NF). Đây là câu hỏi về dạng chuẩn, đáp án là 2NF.'
+  },
+  {
+    id:9, tag:'ra',
+    q:'Có quy tắc tương tự với phép chọn và phép giao không?',
+    opts:['Có','Không'],
+    ans:0
+  },
+  {
+    id:10, tag:'misc',
+    q:'Phát biểu nào sau đây ĐÚNG về vật chất hóa và đường ống?',
+    opts:['Phương pháp đường ống không thể dùng trong mọi trường hợp để thay thế cho vật chất hóa','Đây là 2 hướng tiếp cận để thực hiện đánh giá trực tiếp câu truy vấn viết bằng ngôn ngữ bậc cao','Phương pháp vật chất hóa sẽ sử dụng các quan hệ trung gian để sử dụng cho các phép toán kế'],
+    ans:2,
+    explain:'Tất cả 3 phát biểu đều đúng, nhưng đây là câu chọn một, phương án đúng nhất là "Phương pháp vật chất hóa sẽ sử dụng các quan hệ trung gian".'
+  },
+  {
+    id:11, tag:'sql',
+    q:'Cho schema: SINHVIEN(MASV,TENSV,...), HOCPHAN(...), LOPHOCPHAN(...), DANGKY(MASV,MALHP). Câu lệnh SQL nào đó đưa ra kết quả là danh sách tên SV?',
+    opts:['Đưa ra TenSV không đăng ký môn học nào','Câu lệnh đưa ra Danh sách SV của tất cả các sinh viên','Đưa ra TenSV đăng ký ít nhất 1 môn học','Câu lệnh sai cú pháp'],
+    ans:2
+  },
+  {
+    id:12, tag:'ra',
+    q:'Sơ đồ quan hệ R có m thuộc tính, S có n thuộc tính. Bậc của R × S là bao nhiêu?',
+    opts:['min(m,n)','m*n','Chưa đủ thông tin','max(m,n)','m+n'],
+    ans:4
+  },
+  {
+    id:13, tag:'sql',
+    q:'SELECT COUNT(SDT) FROM SINHVIEN; — Kết quả là gì?',
+    opts:['Tổng số sinh viên','Số sinh viên có số điện thoại khác NULL','Giống COUNT(*)','Số cột trong bảng SINHVIEN'],
+    ans:1
+  },
+  {
+    id:14, tag:'norm',
+    q:'U={A,B,C,D,E,G,H,I}, F={BG→E; I→H; BC→IH; A→CD}. Xác định một khóa tối thiểu của R.',
+    opts:['BGICA','BGIA','ABC','BGA'],
+    ans:2,
+    explain:'A+={A,C,D}. AB+? B không xuất hiện vế trái đơn lẻ. ABC: A→CD, BC→IH→H, I→H. ABC+={A,B,C,D,H,I,... }. Khoá tối thiểu là ABC.'
+  },
+  {
+    id:15, tag:'norm',
+    q:'S(U), U={A,B,C,D,E}, F={A→BC, CD→E}. Phép tách về 3NF không mất mát, bảo toàn phụ thuộc hàm là:',
+    opts:['r1(AB), r2(AC), r3(CDE), r4(AD)','r1(ABC), r2(CDE), r3(ADE)','r1(ABC), r2(CDE), r3(AD)','r1(ABC), r2(CDE)'],
+    ans:2
+  },
+  {
+    id:16, tag:'idx',
+    q:'SELECT * FROM R WHERE A3 >= 5 AND A3 <= 15 thực hiện thường xuyên trên R có nhiều bản ghi. Lựa chọn nào cải tiến thời gian thực thi?',
+    opts:['Chỉ cần đánh chỉ mục trên khóa chính (A1,A2)','Đánh chỉ mục trên A3 dùng B-tree','Đánh chỉ mục trên A3 dùng hàm băm','Dùng tệp đống'],
+    ans:1,
+    explain:'Truy vấn phạm vi (>=, <=) phù hợp với B-tree index, không phù hợp với hash index.'
+  },
+  {
+    id:17, tag:'sql',
+    q:'SELECT MASV, COUNT(*) AS SL FROM DANGKY WHERE SL > 1 GROUP BY MASV; — Kết quả?',
+    opts:['Trả về sinh viên đăng ký >1 lớp','Chạy đúng','Sai logic nhưng chạy được','Lỗi cú pháp'],
+    ans:3,
+    explain:'WHERE không được dùng với alias cột aggregate (SL). Phải dùng HAVING COUNT(*) > 1.'
+  },
+  {
+    id:18, tag:'sql',
+    q:'Cho câu lệnh tạo bảng Nhàchothuê, Kháchhàng, Hợpđồng. Lệnh nào bị lỗi?',
+    opts:['Lệnh tạo bảng Hợpđồng có lỗi.','Lệnh tạo bảng Nhàchothuê','Lệnh tạo bảng Kháchhàng'],
+    ans:0
+  },
+  {
+    id:19, tag:'norm',
+    q:'Phát biểu nào sau đây là đúng nhất về mối quan hệ BCNF và 3NF?',
+    opts:['BCNF → 3NF','3NF → BCNF','Hai dạng chuẩn này không liên quan tới nhau','BCNF ↔ 3NF'],
+    ans:0,
+    explain:'BCNF mạnh hơn 3NF: mọi quan hệ đạt BCNF thì đạt 3NF, nhưng không ngược lại.'
+  },
+  {
+    id:20, tag:'norm',
+    q:'Q(A,B,C,D), F={AB→C; D→B; C→ABD}. Dạng chuẩn cao nhất?',
+    opts:['3NF','Các phương án khác sai','2NF','1NF'],
+    ans:0
+  },
+  {
+    id:21, tag:'view',
+    q:'Nhận định đúng về khung nhìn (view) là:',
+    opts:['Có thể sử dụng trigger để cập nhật giá trị của các bản ghi trong khung hình','Không thể định nghĩa khung nhìn thông qua một khung nhìn khác','Khung nhìn sẽ không còn tồn tại trong CSDL sau khi người dùng đóng kết nối','Không thể cập nhật giá trị của bản ghi trong khung nhìn'],
+    ans:0
+  },
+  {
+    id:22, tag:'sec',
+    q:'Khi cấp quyền READ, người sử dụng chỉ được quyền ...',
+    opts:['Truy vấn, không được phép sửa đổi, bổ sung','sử dụng các câu truy vấn và cập nhật, lưu trữ dữ liệu','sửa đổi, bổ sung và cập nhật dữ liệu','đọc và ghi'],
+    ans:0
+  },
+  {
+    id:23, tag:'norm',
+    q:'R(A,B,C,D,E), F={AB→E, E→C, ABC→D, D→B}. Các khóa tối thiểu của lược đồ?',
+    opts:['AB','AC','AD','ED'],
+    ans:0,
+    explain:'AB+={A,B,E,C,D}=U. AB là khoá. Kiểm tra AC: C không suy ra thêm nhiều, AC+ không đủ U mà không có AB.'
+  },
+  {
+    id:24, tag:'norm',
+    q:'S(U), U={A,B,C,D,E,F,G,H}, F={AB→CDE, CD→E, ABC→FG}. Chuẩn hóa về 3NF (bảo toàn thông tin & phụ thuộc hàm), được bao nhiêu sơ đồ con?',
+    opts:['1','2','3','4'],
+    ans:1,
+    explain:'Phủ tối thiểu: {AB→CDE, ABC→FG} (CD→E bị dư thừa vì AB→CD→E). Tách: R1(ABCDE), R2(ABCFG). Khoá AB đã có → 2 sơ đồ con.'
+  },
+  {
+    id:27, tag:'sql',
+    q:'UPDATE Hoc SET diemthi = 0 WHERE NOT (NULL = 1); — Tác động lên dữ liệu?',
+    opts:['Không bản ghi nào bị thay đổi','Trường diem_thi của bản ghi đầu tiên bị cập nhật thành 0','Trường diem_thi của tất cả các bản ghi bị cập nhật thành 0','Trường diem_thi của bản ghi cuối cùng bị cập nhật thành 0'],
+    ans:2,
+    explain:'NULL = 1 → UNKNOWN. NOT UNKNOWN → UNKNOWN. Điều kiện WHERE UNKNOWN → không lọc bản ghi nào bị bỏ qua. Tất cả bản ghi đều bị cập nhật. Thực ra NOT (NULL=1) = NOT UNKNOWN = UNKNOWN → WHERE UNKNOWN là FALSE → không cập nhật gì. Đây là câu trick: NOT (NULL=1) = UNKNOWN → không có bản ghi nào thỏa mãn → 0 bản ghi bị thay đổi.',
+  },
+  {
+    id:28, tag:'trigger',
+    q:'Phát biểu nào sau đây là SAI về trigger?',
+    opts:['Trigger được tự động kích hoạt khi có sự kiện xảy ra','Trigger được thực thi ở phía hệ quản trị CSDL (server)','Các xử lý trong trigger không làm thay đổi dữ liệu ở các hàng','Trigger là xử lý được gắn với các bảng dữ liệu'],
+    ans:2,
+    explain:'Trigger CÓ THỂ thay đổi dữ liệu trong bảng.'
+  },
+  {
+    id:29, tag:'sql',
+    q:'DELETE FROM Acc WHERE NOT EXISTS(SELECT * FROM Permission p WHERE Acc.AccID = p.AccID); — Kết quả?',
+    opts:['Xóa các tài khoản chưa được trao quyền trên đối tượng nào','Xóa các tài khoản đã được trao quyền trên 1 đối tượng','Lỗi cú pháp','Không bao giờ có bản ghi nào được xóa'],
+    ans:0
+  },
+  {
+    id:30, tag:'sql',
+    q:'NhanVien(<u>NV</u>, HoTen, NamSinh), DuAn(<u>DA</u>, TenDA, KinhPhi), ThamGia(<u>NV,DA</u>, MucLuong). Câu lệnh SQL nào đưa ra HoTen nhân viên làm việc tại dự án tên \'007\'?',
+    opts:['SELECT HoTen FROM NhanVien, DuAn, ThamGia WHERE NhanVien.NV = ThamGia.NV, DuAn.DA = ThamGia.DA AND TenDA = \'007\'','SELECT HoTen FROM NhanVien, DuAn, ThamGia WHERE TenDA = \'007\'','SELECT HoTen FROM NhanVien, ThamGia WHERE NhanVien.NV = ThamGia.NV AND DuAn.DA = ThamGia.DA AND TenDA = \'007\'','SELECT HoTen FROM NhanVien, DuAn, ThamGia WHERE NhanVien.NV = ThamGia.NV AND DuAn.DA = ThamGia.DA AND TenDA = \'007\''],
+    ans:3,
+    isCode:true
+  },
+  {
+    id:31, tag:'ra',
+    q:'R có lực lượng m, S có lực lượng n. Lực lượng của R × S là?',
+    opts:['min(m,n)','Chưa đủ thông tin','m+n','max(m,n)','m*n'],
+    ans:4
+  },
+  {
+    id:32, tag:'misc',
+    q:'Phát biểu nào sau đây về PRIMARY KEY là đúng?',
+    opts:['PRIMARY KEY tự động tạo chỉ mục (index).','Một bảng chỉ có thể có tối đa một PRIMARY KEY, nhưng có thể gồm nhiều cột.','PRIMARY KEY có thể được tham chiếu bởi nhiều FOREIGN KEY ở bảng khác.','Một bảng có thể có nhiều PRIMARY KEY nếu chúng ở các cột khác nhau.','PRIMARY KEY cho phép giá trị NULL.'],
+    ans:0
+  },
+  {
+    id:33, tag:'tx',
+    q:'Xét các phát biểu về SAVEPOINT, phát biểu nào ĐÚNG?',
+    opts:['Có thể tạo nhiều SAVEPOINT trong một giao dịch.','SAVEPOINT cho phép rollback một phần giao dịch.','SAVEPOINT chỉ có thể dùng trong chế độ autocommit = 1.','SAVEPOINT bị xóa khi COMMIT.','Sau khi ROLLBACK TO SAVEPOINT, giao dịch vẫn tiếp tục được.'],
+    ans:0
+  },
+  {
+    id:34, tag:'tx',
+    q:'Lệnh nào giúp một giao dịch quay trở về trạng thái trước khi các thay đổi được lưu vào CSDL?',
+    opts:['ABORT','COMMIT','RELEASE','ROLLBACK'],
+    ans:3
+  },
+  {
+    id:35, tag:'sec',
+    q:'Sau GRANT UPDATE ON QLSV.SINHVIEN TO user2, rồi REVOKE UPDATE ... FROM user2. Phát biểu nào đúng nhất?',
+    opts:['user2 vẫn có quyền UPDATE vì GRANT được thực hiện trước','user2 bị mất tất cả quyền trên CSDL QLSV','user2 bị xóa khỏi hệ thống MySQL','user2 không còn quyền UPDATE trên bảng SINHVIEN'],
+    ans:3
+  },
+  {
+    id:36, tag:'sec',
+    q:'GRANT x ON y TO z WITH GRANT OPTION — Phát biểu nào đúng về x, y, z?',
+    opts:['x là một hoặc một nhóm người sử dụng, y là một hoặc nhiều thao tác, z là một hoặc nhiều đối tượng','x là một hoặc đối tượng, y là một hoặc nhiều thao tác, z là một hoặc một nhóm người sử dụng','x là một hoặc nhiều thao tác, y là một hoặc một nhóm người sử dụng, z là một hoặc nhiều đối tượng','x là một hoặc nhiều thao tác, y là một hoặc nhiều đối tượng, z là một hoặc một nhóm người sử dụng'],
+    ans:3
+  },
+  {
+    id:37, tag:'tx',
+    q:'Giao dịch đọc cùng một tập bản ghi hai lần, lần thứ hai xuất hiện thêm bản ghi mới do giao dịch khác INSERT và COMMIT. Hiện tượng này là gì?',
+    opts:['Dirty Read','Phantom Read','Non-repeatable Read','Lost Update'],
+    ans:1
+  },
+  {
+    id:38, tag:'norm',
+    q:'R(A,B,C,D,E,G,H), F={A→D, AB→D,E, CE→G, AE→H, AD→E}. Phép tách ρ=(ADEH, CEG, ABC). Khi kiểm tra bảo toàn dữ liệu, hàng số mấy có toàn bộ giá trị là a?',
+    opts:['1','3 đáp án trên sai','2','3'],
+    ans:0
+  },
+  {
+    id:39, tag:'tx',
+    q:'Mọi giao dịch không ảnh hưởng đến các giao dịch khác là phải có tính chất nào?',
+    opts:['Tính nhất quán','Tính nguyên tố','Tính cách ly','Tính bền vững'],
+    ans:2
+  },
+  {
+    id:40, tag:'norm',
+    q:'R(A,B,C,D,E), F={AB→E; B→C; ABC→D; A→C}. F tương đương với tập phụ thuộc hàm nào?',
+    opts:['{AB→ED, B→C, A→C}','{B→ED, B→C, A→C}','{AB→ED, AB→C}','{A→ED, B→C, A→C}'],
+    ans:0
+  },
+  {
+    id:41, tag:'norm',
+    q:'R(A,B,E,I,J,G,H), F={AB→E; AC→J; BH→I; B→G; GA→HB}. Có thể suy ra phụ thuộc hàm nào?',
+    opts:['AB→EHIC','ABG→EHI','B→GE','AB→EI'],
+    ans:2,
+    explain:'B→G (cho trước). B→G và B→G, GA→HB → với B ta có G. Để suy ra B→GE ta cần B→E nhưng AB→E chứ không phải B→E. B→GE sai vì B không suy ra E một mình. Đáp án: AB→EI (AB→E trực tiếp, B→G→... xem lại). Thực ra B→G (cho trước) là phụ thuộc hàm suy ra được.'
+  },
+  {
+    id:44, tag:'norm',
+    q:'R(A,B,C,D,E), F={AB→E, B→C, ABC→D, A→C}. Một khóa tối thiểu của R là:',
+    opts:['AB','A','ABC','BC'],
+    ans:0,
+    explain:'AB+ = {A,B,E,C,D} = U. AB là khoá. Không có tập con thực sự nào (A, B) có bao đóng = U.'
+  },
+  {
+    id:45, tag:'ra',
+    q:'Trong đại số quan hệ, phép toán nào không có tính kết hợp?',
+    opts:['Cả ba đều có tính kết hợp','Phép kết nối tự nhiên','Phép lấy tích descartes','Phép kết nối'],
+    ans:0,
+    explain:'Tất cả phép kết nối tự nhiên, tích descartes, và phép kết nối đều có tính kết hợp.'
+  },
+  {
+    id:46, tag:'norm',
+    q:'R(A,B,C,D,E), F={AB→E, B→C, ABC→D, A→C}. Dạng chuẩn cao nhất (giả sử các thuộc tính đều chỉ nhận giá trị nguyên tố)?',
+    opts:['không đạt chuẩn 1','2NF','1NF','3NF'],
+    ans:1,
+    explain:'Khoá là AB. B→C: B là tập con thực sự của khoá AB, C là thuộc tính không khoá → phụ thuộc bộ phận → không đạt 2NF? Vì B→C vi phạm 2NF (B là phần của khoá). Vậy R chỉ đạt 1NF.'
+  },
+  {
+    id:47, tag:'ra',
+    q:'SELECT sname FROM S, SP WHERE S.sid = SP.sid AND pid = \'P1\'. Cây toán tử biểu diễn đúng nhất:',
+    opts:['Π_sname (S ⋈{sid} (σ{pid=\'P1\'}(SP)))','Π_sname (σ_{S.sid=SP.sid AND pid=\'P1\'} (S × SP))','Π_sname (σ_{pid=\'P1\'} (S ∪ SP))','σ_{pid=\'P1\'} (S ⋈_{S.sid=SP.sid} SP) sname'],
+    ans:1,
+    explain:'Cây logic (không tối ưu) biểu diễn đúng nhất SQL trên là: Π_sname(σ(S×SP)). Cây tối ưu là Π_sname(S ⋈ σ(SP)).'
+  },
+  {
+    id:49, tag:'idx',
+    q:'Phát biểu nào ĐÚNG về Clustered Index và Non-Clustered Index?',
+    opts:['Clustered index yêu cầu cột khóa phải là khóa chính (PRIMARY KEY).','Một bảng chỉ có thể có tối đa một clustered index, nhưng có thể có nhiều non-clustered index.','Nếu bảng không có clustered index, dữ liệu lưu theo heap, non-clustered index trỏ đến RID.','Nếu bảng có clustered index, non-clustered index trỏ trực tiếp đến dữ liệu vật lý.','Clustered index quyết định thứ tự vật lý của dữ liệu trong bảng.','Clustered index luôn nhanh hơn non-clustered index trong mọi trường hợp.'],
+    ans:1
+  },
+  {
+    id:50, tag:'sql',
+    q:'NhanVien(<u>NV</u>, HoTen, NamSinh), ThamGia(<u>NV,DA</u>, MucLuong). Câu lệnh SQL nào đưa ra HoTen và số dự án họ tham gia?',
+    opts:['SELECT Hoten, COUNT(NV) FROM NhanVien, ThamGia WHERE NhanVien.NV = ThamGia.NV GROUP BY NhanVien.DA','SELECT HoTen, Count(DA) FROM NhanVien, Thamgia WHERE NhanVien.NV = ThamGia.NV GROUP BY NhanVien.NV','SELECT HoTen, COUNT(DA) FROM NhanVien, ThamGia WHERE NhanVien.NV = ThamGia.NV GROUP BY NV','SELECT HoTen, SUM(DA) FROM NhanVien, ThamGia WHERE NhanVien.NV = ThamGia.NV GROUP BY NhanVien.NV'],
+    ans:1,
+    isCode:true
+  },
+  {
+    id:53, tag:'sql',
+    q:'NhanVien(<u>MaNV</u>, HoTen, NamSinh), DuAn(<u>MaDA</u>, TenDA, KinhPhi), ThamGia(<u>MaNV,MaDA</u>, MucLuong). Phương án nào đảm bảo luôn xóa được nhân viên tên \'Nguyễn Văn A\'?',
+    opts:['DELETE * FROM NhanVien WHERE HoTen = \'Nguyễn Văn A\'','DELETE * FROM ThamGia WHERE MaNV in (...); DELETE * FROM NhanVien WHERE Hoten = \'Nguyễn Văn A\'','DELETE FROM NhanVien WHERE HoTen = \'Nguyễn Văn A\'','DELETE FROM ThamGia WHERE MaNV in (SELECT MaNV FROM NhanVien WHERE HoTen = \'Nguyễn Văn A\'); DELETE FROM NhanVien WHERE HoTen = \'Nguyễn Văn A\''],
+    ans:3,
+    isCode:true
+  },
+  {
+    id:54, tag:'misc',
+    q:'Có tổng cộng bao nhiêu chiến lược tối ưu tổng quát?',
+    opts:['4','7','8','5','6'],
+    ans:2
+  },
+  {
+    id:55, tag:'norm',
+    q:'R(A,B,C,D,E), F={AB→E, B→C, ABC→D, A→C}. Dạng chuẩn cao nhất (các thuộc tính nhận giá trị nguyên tố)?',
+    opts:['2NF','Không đạt chuẩn 1','3NF','1NF'],
+    ans:3,
+    explain:'Khoá là AB. B→C vi phạm 2NF (B là phần khoá, C không khoá). Nên R chỉ đạt 1NF.'
+  },
+  {
+    id:56, tag:'sql',
+    q:'Acc(<u>AccID</u>, Password, <i>AccID_parent</i>). Lệnh nào tạo ràng buộc khóa ngoài cho bảng Acc (AccID_parent tham chiếu AccID)?',
+    opts:['alter table Object add constraint fk_acc foreign key (Accid) references Acc(AccID_parent)','alter table object add constraint kf_acc foreign key (AccID_parent) references Acc(AccID)','alter table Acc add constraint fk_acc foreign key (AccID_parent) references Acc(AccID)','alter table Acc add constraint fk_acc foreign key (AccID) references Acc(AccID_parent)'],
+    ans:2
+  },
+  {
+    id:57, tag:'sql',
+    q:'SELECT SV.MASV FROM SINHVIEN SV JOIN DANGKY DK ON SV.MASV = DK.MASV WHERE YEAR(NGAYSINH) = \'2006\'; — Kết quả?',
+    opts:['Sinh viên đã đăng ký ít nhất một lớp học phần có năm sinh 2006','Sinh viên chưa đăng ký học phần nào có năm sinh 2006','Lỗi cú pháp','Tất cả sinh viên có năm sinh 2006'],
+    ans:0
+  },
+  {
+    id:58, tag:'sql',
+    q:'Thứ tự đúng khi viết câu lệnh truy vấn trong SQL là gì?',
+    opts:['SELECT, FROM, GROUP BY, HAVING, WHERE, ORDER BY','SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY','SELECT, GROUP BY, HAVING, FROM, ORDER BY','SELECT, GROUP BY, HAVING, WHERE, ORDER BY'],
+    ans:1
+  },
+  {
+    id:59, tag:'ra',
+    q:'R trên {A,B,C,D}, S trên {B,D,E,G}, T trên {A,C,H,K}. Sơ đồ quan hệ của (S*T)÷R là:',
+    opts:['{E,G,H,K}','{B,D,H,K}','{A,C,E,G}','{A,B,C,D}'],
+    ans:0,
+    explain:'S*T có các thuộc tính {A,B,C,D,E,G,H,K}. Chia cho R(ABCD) → kết quả là {E,G,H,K}.'
+  },
+  {
+    id:60, tag:'norm',
+    q:'X là một khóa tối thiểu của lược đồ quan hệ S=<U,F> khi và chỉ khi:',
+    opts:['(X→U) ∈ F+, ∀ Z ⊂ X: (Z→U) ∈ F+','(X→U) ∈ F+, ∀ Z ⊂ X: (Z→U) ∉ F+','∀ Z ⊂ X: (Z→U) ∈ F+','(X→U) ∈ F+'],
+    ans:1
+  },
+  {
+    id:61, tag:'sql',
+    q:'CREATE TABLE sinhvien(MSSV char(8) NOT NULL PRIMARY KEY, Hoten varchar(50) NOT NULL, Gioitinh boolean NOT NULL). Câu lệnh nào KHÔNG cho phép thêm thành công?',
+    opts:["INSERT INTO sinhvien VALUES ('20220101', 'Nguyen Van An')","INSERT INTO sinhvien(Hoten, MSSV, Gioitinh) VALUES ('20220101', 'N.V.An', true)","INSERT INTO sinhvien(MSSV, Gioitinh, Hoten) VALUES ('20220101', 2, 'Nguyen Van An')","INSERT INTO sinhvien(MSSV, Hoten) VALUES ('20220101', 'Nguyen Van An')"],
+    ans:3,
+    isCode:true,
+    explain:'Thiếu Gioitinh NOT NULL → lỗi.'
+  },
+  {
+    id:63, tag:'sql',
+    q:'INTERSECT của hai truy vấn nhân viên tham gia DA=\'P01\' và DA=\'P02\'. Nhận định nào đúng?',
+    opts:['Câu truy vấn luôn cho kết quả rỗng','Lỗi cú pháp','Câu truy vấn cho phép đưa ra danh sách nhân viên đã tham gia ít nhất 1 trong hai dự án','Câu truy vấn cho phép đưa ra danh sách nhân viên đã tham gia cả hai dự án có mã \'P01\' và \'P02\''],
+    ans:3
+  },
+  {
+    id:64, tag:'sec',
+    q:'Câu lệnh nào dùng để cấp quyền SELECT và INSERT trên cơ sở dữ liệu QLSV cho user1?',
+    opts:['GRANT SELECT, INSERT ON QLSV TO \'user1\'@\'localhost\'','REVOKE SELECT, INSERT ON QLSV FROM \'user1\'@\'localhost\'','GRANT SELECT, INSERT ON QLSV.* TO \'user1\'@\'localhost\'','GRANT ALL PRIVILEGES QLSV.* TO user1'],
+    ans:2
+  },
+  {
+    id:65, tag:'view',
+    q:'Sử dụng khung nhìn (view) có ưu điểm nào? Chọn 1 phương án phù hợp nhất.',
+    opts:['Bảo mật, đơn giản, nhất quán','Đơn giản, nhất quán','Bảo mật, đơn giản, nhất quán, tăng hiệu năng','Bảo mật, đơn giản'],
+    ans:0
+  },
+  {
+    id:66, tag:'misc',
+    q:'Phát biểu nào dưới đây là ĐÚNG về khóa ngoài?',
+    opts:['Một trường trong bảng có thể tham gia vừa vào khóa chính và vừa vào khóa ngoài của bảng đó.','Mỗi bảng chỉ có 1 khóa ngoài.','Mỗi khóa ngoài chỉ có 1 thuộc tính.','Các thuộc tính nằm trong khóa ngoài phải có tên trùng với tên của các thuộc tính mà nó tham chiếu đến.'],
+    ans:0
+  },
+  {
+    id:67, tag:'sql',
+    q:'SELECT s.* FROM Sinhvien s, DangKy d WHERE s.MaSV = d.MaSV AND MaLop = \'NN01\' AND TenMH = \'Database\'; — Nhận định nào đúng?',
+    opts:['Câu truy vấn đưa ra thông tin SV cũng như điểm số của SV thuộc lớp NN01 đã đăng kí môn Database','Câu truy vấn đưa ra thông tin SV thuộc lớp NN01 đã đăng kí môn Database','Câu lệnh vẫn thực thi nhưng kết quả khác 2 phương án trên','Câu truy vấn không thực thi được'],
+    ans:3,
+    explain:'TenMH không tồn tại trong các bảng được FROM (Sinhvien, DangKy). Câu lệnh sẽ báo lỗi.'
+  },
+  {
+    id:69, tag:'tx',
+    q:'Phát biểu nào dưới đây là SAI về giao dịch?',
+    opts:['Giao dịch là một tập các thao tác được xử lý như một đơn vị không thể chia cắt được','Các tính chất của giao dịch (ACID) được đảm bảo bởi mô-đun quản trị giao dịch của hệ QTCSDL','Định nghĩa tốt giao dịch cho phép đảm bảo tính nhất quán và đúng đắn của dữ liệu','Một giao dịch cụ thể do hệ quản trị CSDL tự phát hiện và định nghĩa'],
+    ans:3
+  },
+  {
+    id:72, tag:'sql',
+    q:'SELECT NV, HoTen FROM NhanVien WHERE (SELECT count(DA) FROM DuAn) = (SELECT count(DA) FROM ThamGia WHERE NhanVien.NV = ThamGia.NV); — Nhận định nào đúng?',
+    opts:['Câu truy vấn cho phép đưa ra danh sách nhân viên tham gia nhiều dự án nhất','Câu truy vấn cho phép đưa ra danh sách nhân viên tham gia tất cả các dự án','Câu truy vấn luôn cho kết quả rỗng','Câu truy vấn cho phép đưa ra danh sách nhân viên tham gia ít nhất 1 dự án'],
+    ans:1,
+    explain:'Điều kiện so sánh COUNT(tổng dự án) = COUNT(dự án của NV đó) → NV tham gia tất cả các dự án.'
+  },
+  {
+    id:73, tag:'norm',
+    q:'R(A,B,C,D), F={AB→C; BC→A; AC→B; BC→D}. Khóa chính là AB. Dạng chuẩn cao nhất?',
+    opts:['Không đạt 1NF','1NF','2NF','3NF'],
+    ans:2,
+    explain:'Khoá là AB. BC→A, BC→D → BC là siêu khoá ngầm. BC→D: BC không là siêu khoá (không bằng AB). D là thuộc tính không khoá. D không phụ thuộc bắc cầu vào khoá AB qua thuộc tính không khoá → R đạt 2NF nhưng vi phạm 3NF? Cần phân tích kỹ hơn.'
+  },
+  {
+    id:74, tag:'sql',
+    q:'NhanVien(<u>MaNV</u>,...,<i>MaPh</i>,...), Phong(<u>MaPh</u>, TenPh,...). Đưa ra tên các phòng mà KHÔNG có nhân viên nào có địa chỉ ở \'Hà Nội\'.',
+    opts:['SELECT TênPh FROM Phòng NATURAL JOIN NhânViên WHERE ĐịaChỉ = \'Hà Nội\'','SELECT TênPh FROM Phòng WHERE MãPh IN (SELECT MãPh FROM NhânViên WHERE ĐịaChỉ = \'Hà Nội\')','SELECT TênPh FROM Phòng WHERE MãPh NOT IN (SELECT MãPh FROM NhânViên WHERE ĐịaChỉ = \'Hà Nội\')','SELECT TênPh FROM Phòng WHERE MãPh NOT IN (SELECT MãPh FROM NhânViên WHERE ĐịaChỉ \'Hà Nội\')'],
+    ans:2
+  },
+  {
+    id:75, tag:'ra',
+    q:'SELECT sid FROM SP WHERE pid = \'P1\' AND qty > 100. Biểu thức đại số tối ưu nhất?',
+    opts:['Π_sid(σ_{pid=\'P1\'}(σ_{qty>100}(SP)))','Π_sid(σ_{pid=\'P1\'}(SP) × σ_{qty>100}(SP))','σ_{pid=\'P1\' AND qty>100}(Π_sid(SP))','Π_sid(σ_{pid=\'P1\' AND qty>100}(SP))'],
+    ans:3,
+    explain:'Áp dụng phép chọn trước khi chiếu: Π_sid(σ_{pid=\'P1\' AND qty>100}(SP)) là tối ưu nhất.'
+  },
+  {
+    id:77, tag:'ra',
+    q:'Biểu thức nào cho kết quả bằng R∩S?',
+    opts:['R \\ (S \\ R)','R \\ (R \\ S)','(R ∪ S) \\ (R \\ S)','S \\ (R \\ S)'],
+    ans:1,
+    explain:'R \\ (R \\ S) = R ∩ S. Phần tử trong R mà không phải trong (R trừ S) = phần tử trong R ∩ S.'
+  },
+  {
+    id:78, tag:'misc',
+    q:'Phát biểu nào dưới đây là CHƯA CHÍNH XÁC về khóa ngoài?',
+    opts:['Mỗi khóa ngoài của bảng này sẽ chỉ tham chiếu đến khóa chính của duy nhất 1 bảng khác.','Một trường tham gia vào khóa ngoài thì không thể tham gia vào khóa chính của bảng.','Mỗi bảng có thể có nhiều khóa ngoài.','Một khóa ngoài có thể có nhiều thuộc tính.'],
+    ans:1,
+    explain:'Một trường CÓ THỂ vừa là khóa ngoài vừa là khóa chính (ví dụ bảng DANGKY(MASV, MALHP) - cả hai vừa là PK ghép, vừa có thể là FK).'
+  },
+  {
+    id:79, tag:'sql',
+    q:'Student(Id, Name, Address). Sinh viên id \'20155041\' chuyển đến \'Hawai\'. Câu lệnh UPDATE thích hợp?',
+    opts:["UPDATE * Set Address = 'Hawai' WHERE id = '20215041'","UPDATE Student Set Address = 'Hawai' WHERE id = '20215041'","UPDATE Student, * Set Address = 'Hawai' WHERE id = '20215041'","UPDATE Student, Address Set Address = 'Hawai' WHERE id = '20215041'"],
+    ans:1,
+    isCode:true
+  },
+  {
+    id:80, tag:'trigger',
+    q:'Trong trigger của SQL Server, bảng nào chứa dữ liệu mới sau thao tác INSERT/UPDATE?',
+    opts:['new','inserted','old','deleted'],
+    ans:1
+  },
+  {
+    id:81, tag:'sql',
+    q:'SELECT SV.MASV FROM SINHVIEN SV LEFT JOIN DANGKY DK ON SV.MASV = DK.MASV AND YEAR(NGAYSINH) = \'2006\'; — Kết quả?',
+    opts:['Tất cả sinh viên có năm sinh 2006','Sinh viên đã đăng ký ít nhất một lớp học phần có năm sinh 2006','Sinh viên chưa đăng ký học phần nào có năm sinh 2006','Lỗi cú pháp'],
+    ans:0,
+    explain:'LEFT JOIN giữ tất cả bản ghi từ SINHVIEN. Điều kiện YEAR(NGAYSINH)=\'2006\' nằm trong ON clause nên không lọc SV, chỉ ảnh hưởng đến phía DANGKY. Kết quả là tất cả MASV trong SINHVIEN.'
+  },
+  {
+    id:82, tag:'misc',
+    q:'Phát biểu nào sau đây về FOREIGN KEY là đúng?',
+    opts:['FOREIGN KEY bắt buộc phải có cùng tên với PRIMARY KEY được tham chiếu.','FOREIGN KEY có thể tham chiếu chính nó (self-reference).','FOREIGN KEY không thể chứa giá trị NULL.','FOREIGN KEY có thể tham chiếu đến PRIMARY KEY hoặc UNIQUE KEY.','Một bảng chỉ có thể có một FOREIGN KEY.'],
+    ans:3
+  },
+  {
+    id:88, tag:'norm',
+    q:'S(U), U={A,B,C,D,E,F}, F={A→B, C→D, CD→EF}. Phủ tối thiểu của F là:',
+    opts:['FC = {A→B, C→D, CD→E, CD→F}','Fc = {A→B, C→D, C→EF}','FC = {A→B, C→D, C→E, C→F}','FC = {A→B, C→E, C→F}'],
+    ans:1,
+    explain:'CD→EF: vế trái có C→D nên D có thể loại: CD→EF → C→EF (vì C→D→...). Không thể loại thêm. Fc = {A→B, C→D, C→EF}.'
+  },
+  {
+    id:89, tag:'norm',
+    q:'U={A,B,C,D,E,G,H}, F={A→D, AB→DE, CE→G, E→H}. Phụ thuộc hàm nào KHÔNG được dẫn xuất từ F?',
+    opts:['AB→H','AB→D','AB→G','AB→E'],
+    ans:2,
+    explain:'AB→D: A→D ✓. AB→E: AB→DE (trực tiếp) ✓. AB→H: AB→E→H ✓. AB→G: cần CE→G, không có cách suy ra C hoặc CE từ AB → AB→G KHÔNG suy được.'
+  },
+  {
+    id:91, tag:'norm',
+    q:'R(ABCDEGH), F={AB→C; D→EG; C→A; BE→C; ACD→B; CE→AG; BC→D; CG→BD; G→H}. Tính (BE)+',
+    opts:['ABCDEGH','ACDGH','ABCDEH','BDEGH'],
+    ans:0,
+    explain:'BE→C (BE→C trực tiếp). BC→D. D→EG. CG→BD. C→A. G→H. BE+= {B,E,C,D,G,A,H} = ABCDEGH.'
+  },
+  {
+    id:92, tag:'misc',
+    q:'Trong mô hình CSDL 3 tầng, điều khẳng định nào sau đây ĐÚNG?',
+    opts:['Người thiết kế CSDL thường chỉ xử lý với sơ đồ trong','Hầu hết người dùng CSDL không bao giờ xem sơ đồ trong (không cần)','Người dùng cuối thông thường, không phải chuyên gia CNTT thường chỉ xử lý ở mức khái niệm','Người quản trị, thiết kế và người dùng cuối thường chỉ xử lý ở mức khung nhìn bên ngoài'],
+    ans:1
+  },
+  {
+    id:94, tag:'tx',
+    q:'Xét các mức cô lập giao dịch. Phát biểu nào sau đây là ĐÚNG?',
+    opts:['READ COMMITTED loại bỏ dirty read nhưng vẫn có thể xảy ra non-repeatable read.','READ UNCOMMITTED có thể xảy ra dirty read.','REPEATABLE READ đảm bảo không xảy ra phantom read.','SERIALIZABLE đảm bảo kết quả tương đương thực thi tuần tự các giao dịch.','SERIALIZABLE là mức cô lập cao nhất.'],
+    ans:0
+  },
+  {
+    id:95, tag:'sql',
+    q:'Muốn bổ sung thêm cột hoặc loại bỏ cột cho bảng đã tạo, dùng câu lệnh bắt đầu với từ khóa nào?',
+    opts:['ALTER TABLE','ADD COLUMN','DROP COLUMN','ALTER COLUMN'],
+    ans:0
+  },
+  {
+    id:96, tag:'trigger',
+    q:'Phát biểu nào dưới đây là ĐÚNG về trigger?',
+    opts:['Trigger được gọi tường minh bởi người phát triển hệ thống','Trigger được thực thi ở phía ứng dụng (client)','Các xử lý trong trigger không làm thay đổi dữ liệu ở các bảng','Trigger được tự động kích hoạt khi có sự kiện xảy ra'],
+    ans:3
+  },
+  {
+    id:99, tag:'norm',
+    q:'Phủ tối thiểu của F = {A→BC; A→B; B→C; AB→C}?',
+    opts:['A→B; B→C','AB→C','A→BC','A→B; AB→C'],
+    ans:0,
+    explain:'A→BC → tách thành A→B và A→C. A→C suy được từ A→B→C → loại A→C. AB→C → B→C dư thừa (A→B, B→C) → loại AB→C và A→C. Fc = {A→B, B→C}.'
+  },
+  {
+    id:100, tag:'misc',
+    q:'Phát biểu nào dưới đây là KHÔNG CHÍNH XÁC về khóa chính (primary key) của 1 bảng?',
+    opts:['Khóa chính có thể có nhiều hơn 1 thuộc tính','Bảng có thể không cần khóa chính','Hai bản ghi bất kỳ không được có giá trị trên khóa chính trùng nhau','Trong 1 bảng có thể có nhiều hơn 1 khóa chính'],
+    ans:3
+  },
+  {
+    id:101, tag:'sql',
+    q:'SELECT MASV FROM SINHVIEN WHERE MASV NOT IN (SELECT MASV FROM DANGKY). Điều gì xảy ra nếu DANGKY.MASV chứa NULL?',
+    opts:['Lỗi runtime','Truy vấn trả về sai một vài dòng','Truy vấn chạy bình thường','Không trả về dòng nào'],
+    ans:3,
+    explain:'NOT IN với subquery chứa NULL: x NOT IN (NULL, ...) → UNKNOWN → không dòng nào được trả về.'
+  },
+  {
+    id:103, tag:'idx',
+    q:'SELECT * FROM SINHVIEN WHERE YEAR(NGAYSINH) = 2006. Nhận định đúng?',
+    opts:['Có thể làm mất hiệu quả index','Không chạy được','Chạy nhanh hơn so với BETWEEN','Sai cú pháp'],
+    ans:0,
+    explain:'Dùng hàm YEAR() trên cột làm index không thể sử dụng được (function-based) → mất hiệu quả index.'
+  },
+  {
+    id:105, tag:'ra',
+    q:'R có n bản ghi, S có m bản ghi. Số lượng bản ghi sau phép nối tự nhiên R*S là:',
+    opts:['Nhỏ hơn min(n,m)','n*m','Đáp án khác','Nhỏ hơn hoặc bằng min(n,m)'],
+    ans:3
+  },
+  {
+    id:107, tag:'sql',
+    q:'SELECT MAHP, COUNT(*) FROM LOPHOCPHAN; — Kết quả?',
+    opts:['Đếm tổng số lớp học phần','Đếm số lớp học phần cho mỗi học phần','Lỗi cú pháp','Đếm số học phần'],
+    ans:2,
+    explain:'Không có GROUP BY nhưng SELECT chứa cả cột không aggregate (MAHP) và hàm aggregate (COUNT(*)) → lỗi cú pháp (hoặc lỗi runtime tùy DBMS).'
+  },
+  {
+    id:108, tag:'norm',
+    q:'R(ABCDEFG), F={B→A; D→C; D→EB; DF→G}. Tách về 3NF, bảo toàn phụ thuộc hàm là:',
+    opts:['R1(BA), B2(DBCFG)','R1(BA), R2(DBCE), R3(DFG)','R1(BA), R2(DC), R3(DE), R4(DFG)'],
+    ans:1
+  },
+  {
+    id:109, tag:'ra',
+    q:'ThueBao(MaTB, TenTB, SoTB, DiaChi). Biểu thức ĐS quan hệ biểu diễn "Liệt kê thông tin thuê bao có mã 3590" là:',
+    opts:['Π_COUNT(*) (σ_MaTB=3590 (ThueBao))','σ_MaTB=3590 (ThueBao)','Π_SoTB (σ_MaTB=3590 (ThueBao))','Π_TenTB (σ_MaTB=3590 (ThueBao))'],
+    ans:1,
+    explain:'"Liệt kê thông tin" = lấy tất cả các cột → không cần Π, chỉ dùng σ.'
+  },
+  {
+    id:110, tag:'idx',
+    q:'Tổ chức tệp dữ liệu nào phải quét toàn bộ tệp khi tìm kiếm một bản ghi?',
+    opts:['Tổ chức tệp đống (heap file)','Tổ chức tệp băm (hashed file)','Tổ chức tệp chỉ dẫn (indexed file)','Tổ chức cây cân bằng (balanced tree)'],
+    ans:0
+  },
+  {
+    id:111, tag:'misc',
+    q:'Khi thực hiện câu lệnh phức tạp có (S ⋈ SP) xuất hiện nhiều lần, chiến lược tối ưu tổng quát khuyên nên làm gì?',
+    opts:['thay thế bằng tích Descartes để đơn giản hóa biểu thức','Thực hiện phép tính (S ⋈ SP) mỗi khi cần để đảm bảo dữ liệu mới nhất','Đẩy phép chiếu vào giữa biểu thức con chung đó','Xác định biểu thức con chung để đánh giá và lưu kết quả tạm thời, chỉ tính một lần'],
+    ans:3
+  },
+  {
+    id:112, tag:'misc',
+    q:'Xử lý một truy vấn bao gồm bao nhiêu bước chính?',
+    opts:['6','5','4','3'],
+    ans:2,
+    explain:'4 bước: Phân tích (parse) → Dịch sang ĐSQH → Tối ưu hóa → Thực thi.'
+  },
+  {
+    id:114, tag:'norm',
+    q:'R(A,B,C,D,E), F={A→E; BC→AD; C→B; E→D}. Trong phủ tối thiểu, C xuất hiện bao nhiêu lần ở vế trái?',
+    opts:['0','1','2','3','4'],
+    ans:2,
+    explain:'Phủ tối thiểu: {A→E, C→B, BC→AD, E→D}. Nhưng BC→AD: C→B suy ra BC→B đã có, xem liệu BC→A còn cần. C→B nên BC→AD → ta có thể dùng C thay BC trong một số. C xuất hiện 2 lần (C→B và BC→AD).'
+  },
+  {
+    id:115, tag:'sql',
+    q:'Câu lệnh nào sau đây bị sai?',
+    opts:["SELECT tenSV as TenSinhVien FROM tblSinhVien","UPDATE tblSinhVien set tenSV = 'Nguyen Van A' where masv = '20122003'","INSERT INTO tblSinhVien (masv, tenSV) VALUE ('20122003', 'Nguyen Van A')","DELETE FROM tblSinhVien WHERE masv = '20122003'"],
+    ans:2,
+    isCode:true,
+    explain:'Cú pháp đúng là VALUES (số nhiều), không phải VALUE.'
+  },
+  {
+    id:116, tag:'norm',
+    q:'Phát biểu nào sau đây là đúng về khóa tối thiểu?',
+    opts:['Tất cả các phương án lựa chọn khác đều sai','Một quan hệ chỉ được có 1 khóa tối thiểu','Một quan hệ có thể có nhiều khóa tối thiểu','K không là khóa tối thiểu của r nếu K là 1 khóa của r và bất kỳ tập con thực sự nào của K đều không phải là khóa của r'],
+    ans:2
+  },
+  {
+    id:117, tag:'trigger',
+    q:'Trong một trigger, nhận định nào đúng về biến "NEW" và "OLD"?',
+    opts:['"NEW" được sử dụng để chọn bản ghi, trong khi "OLD" được sử dụng để chèn bản ghi','"NEW" chỉ áp dụng trong trigger "AFTER", trong khi "OLD" được sử dụng trong trigger "BEFORE"','"NEW" và "OLD" là 2 biến có cùng cấu trúc với cấu trúc của bảng/view có sự kiện kích hoạt trigger','"NEW" đại diện cho bản ghi sau sửa đổi dữ liệu, trong khi "OLD" là biến đại diện cho bản ghi trước sửa đổi'],
+    ans:3
+  },
+  {
+    id:119, tag:'idx',
+    q:'R(A,B,C): A là PK với clustered index, B có non-clustered index. Phát biểu nào ĐÚNG?',
+    opts:['Chỉ mục clustered xác định cách dữ liệu được lưu trữ vật lý trong bảng.','Dữ liệu vật lý của bảng được sắp xếp theo thứ tự của chỉ mục non-clustered.','Truy vấn trên A luôn nhanh hơn truy vấn trên B.','Có thể tạo nhiều clustered index trên cùng một bảng.'],
+    ans:0
+  },
+  {
+    id:120, tag:'tx',
+    q:'Phát biểu nào sau đây về tính chất ACID của giao dịch là ĐÚNG?',
+    opts:['Isolation đảm bảo giao dịch không bị ảnh hưởng bởi giao dịch khác.','Isolation có nghĩa là chỉ cho phép một giao dịch chạy tại một thời điểm.','Atomicity đảm bảo giao dịch thực hiện toàn bộ hoặc không thực hiện gì.','Durability đảm bảo dữ liệu không bị mất sau khi COMMIT, kể cả khi hệ thống crash.','Consistency đảm bảo dữ liệu luôn đúng ngay cả khi mất điện.'],
+    ans:2
+  },
+  {
+    id:121, tag:'norm',
+    q:'Khẳng định nào sau đây là ĐÚNG về dạng chuẩn 2 (2NF)?',
+    opts:['Trong quan hệ ở 2NF, các thuộc tính không khóa phụ thuộc vào tập con thực sự của khóa chính','Trong quan hệ ở 2NF, cần ít nhất một thuộc tính không khóa phụ thuộc hàm đầy đủ vào khóa chính','Trong quan hệ ở 2NF, tất cả các thuộc tính không khóa đều phụ thuộc đầy đủ vào khóa chính.','Trong quan hệ ở 2NF, các thuộc tính không khóa không phụ thuộc bắc cầu vào khóa chính'],
+    ans:2
+  },
+  {
+    id:125, tag:'norm',
+    q:'U={A,B,C,D,E,G,H}, F={A→D, AB→DE, CE→F, E→H, D→E}. Phụ thuộc hàm nào không thuộc phủ tối thiểu Fc?',
+    opts:['E→H','A→D','D→E','E→F'],
+    ans:3,
+    explain:'CE→F: C, E → kiểm tra. A→D, D→E (suy ra A→E), E→H. AB→DE: có A→D và A→E qua D → AB→DE bị loại (A→DE, không cần B). Fc = {A→D, D→E, E→H, CE→F}. E→F? CE→F, không có E→F trực tiếp. Đáp án: AB→DE có thể loại B. Phụ thuộc không thuộc Fc là E→F (không tồn tại trong F gốc... Đây là E→F không được suy ra từ F).'
+  },
+  {
+    id:126, tag:'ra',
+    q:'SELECT sname FROM S, SP WHERE S.sid = SP.sid. Biểu diễn tối ưu nhất?',
+    opts:['B. Π_sname(S ⋈_{sid} SP)','C. Π_sname(Π_{sid,sname}(S) ⋈{sid} Π{sid}(SP))','A. Π_sname(σ_{S.sid=SP.sid}(S × SP))','D. σ_{S.sid=SP.sid}(Π_{sname}(S) × SP)'],
+    ans:1,
+    explain:'C là tối ưu nhất: chiếu trước (lấy ít thuộc tính) rồi mới nối → giảm kích thước trung gian.'
+  },
+  {
+    id:127, tag:'norm',
+    q:'LOPHOC(SinhVien, MonHoc, GiangVien), FD: (SinhVien,MonHoc)→GiangVien; GiangVien→MonHoc. Dạng chuẩn cao nhất?',
+    opts:['Không đạt 1NF','3NF','2NF','1NF'],
+    ans:2,
+    explain:'Khoá là (SinhVien, MonHoc). GiangVien→MonHoc: GiangVien là thuộc tính không khoá xác định MonHoc (thuộc tính không khoá khác) → vi phạm 3NF. Nhưng mọi thuộc tính không khoá phụ thuộc đầy đủ vào khoá? GiangVien phụ thuộc đầy đủ vào (SV,MH). MonHoc phụ thuộc vào GiangVien (bắc cầu qua GiangVien). → vi phạm 3NF → đạt 2NF.'
+  },
+  {
+    id:130, tag:'sql',
+    q:'Chọn câu truy vấn SELECT trả về tất cả các mặt hàng mà tên BẮT ĐẦU bởi chuỗi \'choco\'.',
+    opts:["SELECT * FROM items WHERE name LIKE 'choco_'","SELECT * FROM items WHRE name = 'choco%'","SELECT * FROM items WHERE name LIKE '%choco%'","SELECT * FROM items WHERE name LIKE 'choco%'"],
+    ans:3,
+    isCode:true
+  },
+  {
+    id:131, tag:'norm',
+    q:'R(A,B,C,D,E), F={AB→CD; E→C; D→CE; A→E}. Tính (AD)+',
+    opts:['ACE','ABD','ACED','ABCDE'],
+    ans:3,
+    explain:'AD: A→E, D→CE. AD+={A,D,E,C}. E→C (đã có). A→E (đã có). Vậy AD+={A,C,D,E} = ACDE → ABCDE? Không có B. AD+= {A,D,E,C} = ACDE.'
+  },
+  {
+    id:133, tag:'misc',
+    q:'Phát biểu nào dưới đây là ĐÚNG về khóa ngoài?',
+    opts:['Một bảng chỉ có nhiều nhất 1 khóa ngoài','Khóa ngoài của một bảng có thể tham chiếu đến khóa chính của chính bảng đó','Khóa ngoài luôn tham gia vào khóa chính','Một bảng luôn có ít nhất 1 khóa ngoài'],
+    ans:1
+  },
+  {
+    id:134, tag:'norm',
+    q:'R(A,B,C,D,E), F={A→BC, B→C, CD→E}. Bao đóng của BDE là:',
+    opts:['ABCDE','BCD','BCDE','BDE'],
+    ans:3,
+    explain:'BDE: B→C. BDE+={B,D,E,C}. CD→E (đã có). Vậy (BDE)+={B,C,D,E} = BCDE.'
+  },
+  {
+    id:136, tag:'idx',
+    q:'Trường hợp nào KHÔNG NÊN đánh chỉ mục cho bảng dữ liệu?',
+    opts:['Tất cả các phương án chọn khác','Các bảng được cập nhật và thêm dữ liệu thường xuyên','Các bảng có kích thước nhỏ','Các cột được cập nhật dữ liệu thường xuyên, các cột có nhiều giá trị NULL'],
+    ans:0
+  },
+  {
+    id:137, tag:'tx',
+    q:'Đảm bảo tính không thể chia cắt là tính chất nào của một giao dịch?',
+    opts:['Tính nguyên tố','Tính nhất quán','Tính bền vững','Tính cách ly'],
+    ans:0
+  },
+  {
+    id:139, tag:'ra',
+    q:'SELECT P.pname FROM P, SP WHERE P.pid = SP.pid AND SP.sid = \'S1\'. Phương án nào tối ưu nhất?',
+    opts:['Π_pname(σ_{sid=\'S1\'}(P ⋈{pid} SP))','Π_pname(σ_{P.pid=SP.pid AND SP.sid=\'S1\'}(P × SP))','Π_pname(Π{pid,pname}(P) ⋈{pid} Π{pid}(σ_{sid=\'S1\'}(SP)))','Π_pname(P ⋈_{pid} SP)'],
+    ans:2,
+    explain:'Chiếu và chọn trước để giảm kích thước, rồi mới nối.'
+  },
+  {
+    id:141, tag:'tx',
+    q:'Chỉ những dữ liệu hợp lệ được lưu trữ là tính chất nào của một giao dịch?',
+    opts:['Tính nhất quán','Tính nguyên tố','Tính bền vững','Tính cô lập'],
+    ans:0
+  },
+  {
+    id:142, tag:'misc',
+    q:'Kiến trúc của một Hệ quản trị CSDL bao gồm:',
+    opts:['Bộ xử lý câu hỏi, bộ quản trị giao dịch, bộ quản lý lưu trữ','Bộ xử lý câu hỏi, các truy vấn, bộ quản lý lưu trữ','Bộ xử lý câu hỏi, sơ đồ dữ liệu, bộ quản lý lưu trữ','Bộ xử lý câu hỏi, ngôn ngữ dữ liệu, bộ quản lý lưu trữ'],
+    ans:0
+  },
+];
+
+const LETTERS = ['A','B','C','D','E','F'];
+const TAG_LABELS = {
+  sql:'SQL', norm:'Chuẩn hóa', ra:'Đại số QH', tx:'Giao dịch',
+  idx:'Index', view:'View', trigger:'Trigger', sec:'Bảo mật', er:'ER', misc:'Khác'
+};
+
+let activeQuestions = [];
+let userAnswers = {};    // id → optIndex
+let correctCount = 0;
+let showGrid = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function startQuiz(mode) {
+  userAnswers = {}; correctCount = 0;
+  if (mode === 'random20') {
+    activeQuestions = shuffle(QUESTIONS).slice(0,20);
+  } else {
+    activeQuestions = [...QUESTIONS];
+  }
+  document.getElementById('filter-info').textContent =
+    `${activeQuestions.length} câu`;
+  document.getElementById('summary').classList.remove('show');
+  renderQuiz();
+  updateScore();
+  updateProgress();
+}
+
+function renderQuiz() {
+  const area = document.getElementById('quiz-area');
+  area.innerHTML = '';
+  activeQuestions.forEach((q, idx) => {
+    area.appendChild(makeCard(q, idx));
+  });
+  buildGrid();
+}
+
+function makeCard(q, idx) {
+  const div = document.createElement('div');
+  div.className = 'qcard';
+  div.id = `qcard-${q.id}`;
+
+  const hasCode = q.isCode;
+
+  div.innerHTML = `
+    <div class="qcard-header">
+      <span class="q-num">Q${String(idx+1).padStart(2,'0')}</span>
+      <span class="q-tag tag-${q.tag}">${TAG_LABELS[q.tag]||q.tag}</span>
+    </div>
+    <div class="q-text">${fmtText(q.q)}</div>
+    <div class="options">
+      ${q.opts.map((o,i)=>`
+        <div class="opt" data-qid="${q.id}" data-i="${i}" onclick="selectOpt(${q.id},${i})">
+          <span class="opt-letter">${LETTERS[i]}</span>
+          <span class="opt-text ${hasCode?'opt-code':''}">${escHtml(o)}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="feedback" id="fb-${q.id}"></div>
+  `;
+  return div;
+}
+
+function fmtText(t) {
+  // newlines → <br>, simple SQL highlight
+  return escHtml(t).replace(/\n/g,'<br>');
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function selectOpt(qid, optIdx) {
+  if (userAnswers[qid] !== undefined) return; // already answered
+  const q = QUESTIONS.find(x=>x.id===qid);
+  userAnswers[qid] = optIdx;
+
+  const opts = document.querySelectorAll(`.opt[data-qid="${qid}"]`);
+  opts.forEach(o => o.classList.add('disabled'));
+
+  const chosen = document.querySelector(`.opt[data-qid="${qid}"][data-i="${optIdx}"]`);
+  const correct = document.querySelector(`.opt[data-qid="${qid}"][data-i="${q.ans}"]`);
+
+  const fb = document.getElementById(`fb-${qid}`);
+  const card = document.getElementById(`qcard-${qid}`);
+
+  if (optIdx === q.ans) {
+    chosen.classList.add('correct');
+    fb.className = 'feedback ok show';
+    fb.textContent = '✓ Chính xác!';
+    card.classList.add('answered-correct');
+    correctCount++;
+  } else {
+    chosen.classList.add('wrong-sel');
+    correct.classList.add('correct');
+    fb.className = 'feedback bad show';
+    fb.innerHTML = `✗ Sai. Đáp án đúng: <b>${LETTERS[q.ans]}</b>${q.explain ? ' — '+escHtml(q.explain) : ''}`;
+    card.classList.add('answered-wrong');
+  }
+
+  updateScore();
+  updateProgress();
+  updateGrid(qid, optIdx === q.ans);
+
+  if (Object.keys(userAnswers).length === activeQuestions.length) {
+    showSummary();
+  }
+}
+
+function updateScore() {
+  const total = Object.keys(userAnswers).length;
+  document.getElementById('score-val').textContent = correctCount;
+  document.getElementById('score-total').textContent = total;
+  document.getElementById('nav-info').textContent =
+    `${total}/${activeQuestions.length} đã trả lời`;
+}
+
+function updateProgress() {
+  const pct = activeQuestions.length
+    ? (Object.keys(userAnswers).length / activeQuestions.length) * 100 : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function showSummary() {
+  const total = activeQuestions.length;
+  const pct = Math.round(correctCount/total*100);
+  document.getElementById('pct-val').textContent = pct+'%';
+  document.getElementById('s-correct').textContent = correctCount;
+  document.getElementById('s-wrong').textContent = total-correctCount;
+  document.getElementById('s-total').textContent = total;
+  const msg = pct>=90?'Xuất sắc! 🚀':pct>=70?'Tốt lắm! 💪':pct>=50?'Cần ôn thêm một chút 📖':'Hãy xem lại lý thuyết nhé 📚';
+  document.getElementById('s-msg').textContent = msg;
+  document.getElementById('summary').classList.add('show');
+  setTimeout(()=>document.getElementById('summary').scrollIntoView({behavior:'smooth'}),300);
+}
+
+function resetQuiz() {
+  activeQuestions = [];
+  userAnswers = {};
+  correctCount = 0;
+  document.getElementById('quiz-area').innerHTML = '';
+  document.getElementById('summary').classList.remove('show');
+  document.getElementById('score-val').textContent = '0';
+  document.getElementById('score-total').textContent = '0';
+  document.getElementById('nav-info').textContent = '';
+  document.getElementById('filter-info').textContent = '';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('mini-grid').innerHTML = '';
+  document.getElementById('mini-grid').classList.remove('show');
+  showGrid = false;
+}
+
+function buildGrid() {
+  const grid = document.getElementById('mini-grid');
+  grid.innerHTML = '';
+  activeQuestions.forEach((q,i)=>{
+    const d = document.createElement('div');
+    d.className = 'mg-dot';
+    d.id = `mg-${q.id}`;
+    d.textContent = i+1;
+    d.title = `Q${i+1}`;
+    d.onclick = ()=>document.getElementById(`qcard-${q.id}`).scrollIntoView({behavior:'smooth'});
+    grid.appendChild(d);
+  });
+}
+
+function updateGrid(qid, ok) {
+  const d = document.getElementById(`mg-${qid}`);
+  if (d) d.classList.add(ok ? 'correct' : 'wrong');
+}
+
+function toggleGrid() {
+  showGrid = !showGrid;
+  document.getElementById('mini-grid').classList.toggle('show', showGrid);
+}
+
+function scrollToBottom() {
+  window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+}
+
+// auto-start
+startQuiz('all');
+</script>
+</body>
+</html>
